@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -24,6 +26,19 @@ public class ProductoController {
     public ResponseEntity<Producto> getProductoById(@PathVariable Long id) {
         return productoService.findById(id)
                 .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/stock")
+    public ResponseEntity<Map<String, Object>> verificarStock(@PathVariable Long id,
+                                                          @RequestParam(required = false) Integer cantidad) {
+        return productoService.findById(id)
+                .map(producto -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("productoId", producto.getId());
+                    response.put("stock", producto.getStock());
+                    return ResponseEntity.ok(response);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
