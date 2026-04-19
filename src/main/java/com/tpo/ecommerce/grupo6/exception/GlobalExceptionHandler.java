@@ -22,4 +22,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> manejarProductoNoEncontrado(ProductoNoEncontradoException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
+
+    @ExceptionHandler(CategoriaNoEncontradaException.class)
+    public ResponseEntity<String> manejarCategoriaNoEncontrada(CategoriaNoEncontradaException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(CategoriaDuplicadaException.class)
+    public ResponseEntity<String> manejarCategoriaDuplicada(CategoriaDuplicadaException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
 }
