@@ -24,22 +24,20 @@ public class ProductoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Producto> getProductoById(@PathVariable Long id) {
-        return productoService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Producto producto = productoService.findById(id);
+        return ResponseEntity.ok(producto);
     }
 
     @GetMapping("/{id}/stock")
     public ResponseEntity<Map<String, Object>> verificarStock(@PathVariable Long id,
-                                                          @RequestParam(required = false) Integer cantidad) {
-        return productoService.findById(id)
-                .map(producto -> {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("productoId", producto.getId());
-                    response.put("stock", producto.getStock());
-                    return ResponseEntity.ok(response);
-                })
-                .orElse(ResponseEntity.notFound().build());
+                                                              @RequestParam(required = false) Integer cantidad) {
+        Producto producto = productoService.findById(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("productoId", producto.getId());
+        response.put("stock", producto.getStock());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -49,25 +47,21 @@ public class ProductoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Producto> updateProducto(@PathVariable Long id, @RequestBody Producto productoDetails) {
-        return productoService.findById(id)
-                .map(producto -> {
-                    producto.setNombre(productoDetails.getNombre());
-                    producto.setDescripcion(productoDetails.getDescripcion());
-                    producto.setPrecio(productoDetails.getPrecio());
-                    producto.setStock(productoDetails.getStock());
-                    producto.setCategoria(productoDetails.getCategoria());
-                    Producto updatedProducto = productoService.save(producto);
-                    return ResponseEntity.ok(updatedProducto);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        Producto producto = productoService.findById(id);
+
+        producto.setNombre(productoDetails.getNombre());
+        producto.setDescripcion(productoDetails.getDescripcion());
+        producto.setPrecio(productoDetails.getPrecio());
+        producto.setStock(productoDetails.getStock());
+        producto.setCategoria(productoDetails.getCategoria());
+
+        Producto updatedProducto = productoService.save(producto);
+        return ResponseEntity.ok(updatedProducto);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProducto(@PathVariable Long id) {
-        if (productoService.findById(id).isPresent()) {
-            productoService.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        productoService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
