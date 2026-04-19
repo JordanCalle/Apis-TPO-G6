@@ -1,0 +1,34 @@
+package com.tpo.ecommerce.grupo6.controller;
+
+import com.tpo.ecommerce.grupo6.model.Usuario;
+import com.tpo.ecommerce.grupo6.security.AuthService;
+import com.tpo.ecommerce.grupo6.security.dto.AuthRequest;
+import com.tpo.ecommerce.grupo6.security.dto.AuthResponse;
+import com.tpo.ecommerce.grupo6.security.dto.RegisterRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    @Autowired
+    private AuthService authService;
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+        String token = authService.authenticate(request.getEmail(), request.getPassword());
+        return ResponseEntity.ok(new AuthResponse(token));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Usuario> register(@RequestBody RegisterRequest request) {
+        Usuario usuario = new Usuario();
+        usuario.setNombre(request.getNombre());
+        usuario.setEmail(request.getEmail());
+        usuario.setPassword(request.getPassword());
+        Usuario savedUser = authService.register(usuario);
+        return ResponseEntity.ok(savedUser);
+    }
+}
