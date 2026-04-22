@@ -1,5 +1,9 @@
 package com.tpo.ecommerce.grupo6.controller;
 
+import com.tpo.ecommerce.grupo6.dto.CreateUsuarioDTO;
+import com.tpo.ecommerce.grupo6.dto.UpdateUsuarioDTO;
+import com.tpo.ecommerce.grupo6.dto.UsuarioDTO;
+import com.tpo.ecommerce.grupo6.mapper.UsuarioMapper;
 import com.tpo.ecommerce.grupo6.model.Usuario;
 import com.tpo.ecommerce.grupo6.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,32 +19,35 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private UsuarioMapper usuarioMapper;
+
     @GetMapping
-    public List<Usuario> getAllUsuarios() {
-        return usuarioService.findAll();
+    public List<UsuarioDTO> getAllUsuarios() {
+        return usuarioMapper.toDTOList(usuarioService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> getUsuarioById(@PathVariable Long id) {
+    public ResponseEntity<UsuarioDTO> getUsuarioById(@PathVariable Long id) {
         return usuarioService.findById(id)
-                .map(ResponseEntity::ok)
+                .map(usuario -> ResponseEntity.ok(usuarioMapper.toDTO(usuario)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Usuario createUsuario(@RequestBody Usuario usuario) {
-        return usuarioService.save(usuario);
+    public UsuarioDTO createUsuario(@RequestBody CreateUsuarioDTO createDTO) {
+        Usuario usuario = usuarioMapper.toEntity(createDTO);
+        Usuario savedUsuario = usuarioService.save(usuario);
+        return usuarioMapper.toDTO(savedUsuario);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> updateUsuario(@PathVariable Long id, @RequestBody Usuario usuarioDetails) {
+    public ResponseEntity<UsuarioDTO> updateUsuario(@PathVariable Long id, @RequestBody UpdateUsuarioDTO updateDTO) {
         return usuarioService.findById(id)
                 .map(usuario -> {
-                    usuario.setNombre(usuarioDetails.getNombre());
-                    usuario.setEmail(usuarioDetails.getEmail());
-                    usuario.setPassword(usuarioDetails.getPassword());
+                    usuarioMapper.updateEntity(updateDTO, usuario);
                     Usuario updatedUsuario = usuarioService.save(usuario);
-                    return ResponseEntity.ok(updatedUsuario);
+                    return ResponseEntity.ok(usuarioMapper.toDTO(updatedUsuario));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

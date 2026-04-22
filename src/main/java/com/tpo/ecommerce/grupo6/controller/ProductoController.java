@@ -1,5 +1,9 @@
 package com.tpo.ecommerce.grupo6.controller;
 
+import com.tpo.ecommerce.grupo6.dto.CreateProductoDTO;
+import com.tpo.ecommerce.grupo6.dto.ProductoDTO;
+import com.tpo.ecommerce.grupo6.dto.UpdateProductoDTO;
+import com.tpo.ecommerce.grupo6.mapper.ProductoMapper;
 import com.tpo.ecommerce.grupo6.model.Producto;
 import com.tpo.ecommerce.grupo6.service.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +21,18 @@ public class ProductoController {
     @Autowired
     private ProductoService productoService;
 
+    @Autowired
+    private ProductoMapper productoMapper;
+
     @GetMapping
-    public List<Producto> getAllProductos() {
-        return productoService.findAll();
+    public List<ProductoDTO> getAllProductos() {
+        return productoMapper.toDTOList(productoService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Producto> getProductoById(@PathVariable Long id) {
+    public ResponseEntity<ProductoDTO> getProductoById(@PathVariable Long id) {
         Producto producto = productoService.findById(id);
-        return ResponseEntity.ok(producto);
+        return ResponseEntity.ok(productoMapper.toDTO(producto));
     }
 
     @GetMapping("/{id}/stock")
@@ -41,22 +48,18 @@ public class ProductoController {
     }
 
     @PostMapping
-    public Producto createProducto(@RequestBody Producto producto) {
-        return productoService.save(producto);
+    public ProductoDTO createProducto(@RequestBody CreateProductoDTO createDTO) {
+        Producto producto = productoMapper.toEntity(createDTO);
+        Producto savedProducto = productoService.save(producto);
+        return productoMapper.toDTO(savedProducto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> updateProducto(@PathVariable Long id, @RequestBody Producto productoDetails) {
+    public ResponseEntity<ProductoDTO> updateProducto(@PathVariable Long id, @RequestBody UpdateProductoDTO updateDTO) {
         Producto producto = productoService.findById(id);
-
-        producto.setNombre(productoDetails.getNombre());
-        producto.setDescripcion(productoDetails.getDescripcion());
-        producto.setPrecio(productoDetails.getPrecio());
-        producto.setStock(productoDetails.getStock());
-        producto.setCategoria(productoDetails.getCategoria());
-
+        productoMapper.updateEntity(updateDTO, producto);
         Producto updatedProducto = productoService.save(producto);
-        return ResponseEntity.ok(updatedProducto);
+        return ResponseEntity.ok(productoMapper.toDTO(updatedProducto));
     }
 
     @DeleteMapping("/{id}")
