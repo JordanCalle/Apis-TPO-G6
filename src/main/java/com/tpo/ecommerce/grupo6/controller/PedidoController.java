@@ -1,5 +1,6 @@
 package com.tpo.ecommerce.grupo6.controller;
 
+import com.tpo.ecommerce.grupo6.dto.CheckoutDTO;
 import com.tpo.ecommerce.grupo6.dto.CreatePedidoDTO;
 import com.tpo.ecommerce.grupo6.dto.PedidoDTO;
 import com.tpo.ecommerce.grupo6.dto.UpdatePedidoDTO;
@@ -34,6 +35,13 @@ public class PedidoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PostMapping("/checkout")
+    public ResponseEntity<PedidoDTO> checkout(@RequestBody CheckoutDTO checkoutDTO) {
+        Pedido pedido = pedidoService.checkout(checkoutDTO);
+        PedidoDTO pedidoDTO = pedidoMapper.toDTO(pedido);
+        return ResponseEntity.ok(pedidoDTO);
+    }
+
     @PostMapping
     public PedidoDTO createPedido(@RequestBody CreatePedidoDTO createDTO) {
         Pedido pedido = pedidoMapper.toEntity(createDTO);
@@ -60,5 +68,4 @@ public class PedidoController {
         }
         return ResponseEntity.notFound().build();
     }
-
 }
