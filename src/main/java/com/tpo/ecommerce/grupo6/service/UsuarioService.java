@@ -1,5 +1,9 @@
 package com.tpo.ecommerce.grupo6.service;
 
+import com.tpo.ecommerce.grupo6.dto.CreateUsuarioDTO;
+import com.tpo.ecommerce.grupo6.dto.UpdateUsuarioDTO;
+import com.tpo.ecommerce.grupo6.dto.UsuarioDTO;
+import com.tpo.ecommerce.grupo6.mapper.UsuarioMapper;
 import com.tpo.ecommerce.grupo6.model.Usuario;
 import com.tpo.ecommerce.grupo6.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,20 +18,37 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public List<Usuario> findAll() {
-        return usuarioRepository.findAll();
+    @Autowired
+    private UsuarioMapper usuarioMapper;
+
+    public List<UsuarioDTO> findAll() {
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        return usuarioMapper.toDTOList(usuarios);
     }
 
-    public Optional<Usuario> findById(Long id) {
-        return usuarioRepository.findById(id);
+    public Optional<UsuarioDTO> findById(Long id) {
+        return usuarioRepository.findById(id)
+                .map(usuarioMapper::toDTO);
     }
 
-    public Optional<Usuario> findByEmail(String email) {
-        return usuarioRepository.findByEmail(email);
+    public Optional<UsuarioDTO> findByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .map(usuarioMapper::toDTO);
     }
 
-    public Usuario save(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+    public UsuarioDTO save(CreateUsuarioDTO dto) {
+        Usuario usuario = usuarioMapper.toEntity(dto);
+        Usuario savedUsuario = usuarioRepository.save(usuario);
+        return usuarioMapper.toDTO(savedUsuario);
+    }
+
+    public Optional<UsuarioDTO> update(Long id, UpdateUsuarioDTO dto) {
+        return usuarioRepository.findById(id)
+                .map(usuario -> {
+                    usuarioMapper.updateEntity(dto, usuario);
+                    Usuario updatedUsuario = usuarioRepository.save(usuario);
+                    return usuarioMapper.toDTO(updatedUsuario);
+                });
     }
 
     public void deleteById(Long id) {
