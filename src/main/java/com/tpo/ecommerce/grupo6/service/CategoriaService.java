@@ -1,7 +1,11 @@
 package com.tpo.ecommerce.grupo6.service;
 
+import com.tpo.ecommerce.grupo6.dto.CategoriaDTO;
+import com.tpo.ecommerce.grupo6.dto.CreateCategoriaDTO;
+import com.tpo.ecommerce.grupo6.dto.UpdateCategoriaDTO;
 import com.tpo.ecommerce.grupo6.exception.CategoriaDuplicadaException;
 import com.tpo.ecommerce.grupo6.exception.CategoriaNoEncontradaException;
+import com.tpo.ecommerce.grupo6.mapper.CategoriaMapper;
 import com.tpo.ecommerce.grupo6.model.Categoria;
 import com.tpo.ecommerce.grupo6.repository.CategoriaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,40 +20,50 @@ public class CategoriaService {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
-    public List<Categoria> findAll() {
-        return categoriaRepository.findAll();
+    @Autowired
+    private CategoriaMapper categoriaMapper;
+
+    public List<CategoriaDTO> findAll() {
+        List<Categoria> categorias = categoriaRepository.findAll();
+        return categoriaMapper.toDTOList(categorias);
     }
 
-    public Categoria findById(Long id) {
-        return categoriaRepository.findById(id)
-                .orElseThrow(() -> new CategoriaNoEncontradaException("Categoría no encontrada con id: " + id));
-    }
-
-    public Categoria save(Categoria categoria) {
-        Optional<Categoria> categoriaExistente = categoriaRepository.findByNombre(categoria.getNombre());
-
-        if (categoriaExistente.isPresent()) {
-            throw new CategoriaDuplicadaException("Ya existe una categoría con nombre: " + categoria.getNombre());
-        }
-
-        return categoriaRepository.save(categoria);
-    }
-
-    public Categoria update(Long id, Categoria categoriaDetails) {
+    public CategoriaDTO findById(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new CategoriaNoEncontradaException("Categoría no encontrada con id: " + id));
 
-        Optional<Categoria> categoriaConMismoNombre = categoriaRepository.findByNombre(categoriaDetails.getNombre());
+        return categoriaMapper.toDTO(categoria);
+    }
+
+    public CategoriaDTO save(CreateCategoriaDTO createDTO) {
+        Optional<Categoria> categoriaExistente = categoriaRepository.findByNombre(createDTO.getNombre());
+
+        if (categoriaExistente.isPresent()) {
+            throw new CategoriaDuplicadaException("Ya existe una categoría con nombre: " + createDTO.getNombre());
+        }
+
+        Categoria categoria = categoriaMapper.toEntity(createDTO);
+        Categoria savedCategoria = categoriaRepository.save(categoria);
+
+        return categoriaMapper.toDTO(savedCategoria);
+    }
+
+    public CategoriaDTO update(Long id, UpdateCategoriaDTO updateDTO) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new CategoriaNoEncontradaException("Categoría no encontrada con id: " + id));
+
+        Optional<Categoria> categoriaConMismoNombre = categoriaRepository.findByNombre(updateDTO.getNombre());
 
         if (categoriaConMismoNombre.isPresent() &&
                 !categoriaConMismoNombre.get().getId().equals(id)) {
-            throw new CategoriaDuplicadaException("Ya existe una categoría con nombre: " + categoriaDetails.getNombre());
+            throw new CategoriaDuplicadaException("Ya existe una categoría con nombre: " + updateDTO.getNombre());
         }
 
-        categoria.setNombre(categoriaDetails.getNombre());
-        categoria.setDescripcion(categoriaDetails.getDescripcion());
+        categoriaMapper.updateEntity(updateDTO, categoria);
 
-        return categoriaRepository.save(categoria);
+        Categoria updatedCategoria = categoriaRepository.save(categoria);
+
+        return categoriaMapper.toDTO(updatedCategoria);
     }
 
     public void deleteById(Long id) {

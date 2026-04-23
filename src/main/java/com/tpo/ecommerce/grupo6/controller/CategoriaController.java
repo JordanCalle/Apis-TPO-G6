@@ -19,33 +19,27 @@ public class CategoriaController {
     @Autowired
     private CategoriaService categoriaService;
 
-    @Autowired
-    private CategoriaMapper categoriaMapper;
-
     @GetMapping
     public List<CategoriaDTO> getAllCategorias() {
-        return categoriaMapper.toDTOList(categoriaService.findAll());
+        return categoriaService.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoriaDTO> getCategoriaById(@PathVariable Long id) {
-        Categoria categoria = categoriaService.findById(id);
-        return ResponseEntity.ok(categoriaMapper.toDTO(categoria));
+        CategoriaDTO categoria = categoriaService.findById(id);
+        return ResponseEntity.ok(categoria);
     }
 
     @PostMapping
     public CategoriaDTO createCategoria(@RequestBody CreateCategoriaDTO createDTO) {
-        Categoria categoria = categoriaMapper.toEntity(createDTO);
-        Categoria savedCategoria = categoriaService.save(categoria);
-        return categoriaMapper.toDTO(savedCategoria);
+        return categoriaService.save(createDTO);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaDTO> updateCategoria(@PathVariable Long id, @RequestBody UpdateCategoriaDTO updateDTO) {
-        Categoria categoria = categoriaService.findById(id);
-        categoriaMapper.updateEntity(updateDTO, categoria);
-        Categoria updatedCategoria = categoriaService.save(categoria);
-        return ResponseEntity.ok(categoriaMapper.toDTO(updatedCategoria));
+    public ResponseEntity<CategoriaDTO> updateCategoria(@PathVariable Long id,
+                                                        @RequestBody UpdateCategoriaDTO updateDTO) {
+        CategoriaDTO updatedCategoria = categoriaService.update(id, updateDTO);
+        return ResponseEntity.ok(updatedCategoria);
     }
 
     @DeleteMapping("/{id}")
