@@ -1,5 +1,9 @@
 package com.tpo.ecommerce.grupo6.controller;
 
+import com.tpo.ecommerce.grupo6.dto.CreatePedidoDTO;
+import com.tpo.ecommerce.grupo6.dto.PedidoDTO;
+import com.tpo.ecommerce.grupo6.dto.UpdatePedidoDTO;
+import com.tpo.ecommerce.grupo6.mapper.PedidoMapper;
 import com.tpo.ecommerce.grupo6.model.Pedido;
 import com.tpo.ecommerce.grupo6.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,36 +19,35 @@ public class PedidoController {
     @Autowired
     private PedidoService pedidoService;
 
+    @Autowired
+    private PedidoMapper pedidoMapper;
+
     @GetMapping
-    public List<Pedido> getAllPedidos() {
-        return pedidoService.findAll();
+    public List<PedidoDTO> getAllPedidos() {
+        return pedidoMapper.toDTOList(pedidoService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Pedido> getPedidoById(@PathVariable Long id) {
+    public ResponseEntity<PedidoDTO> getPedidoById(@PathVariable Long id) {
         return pedidoService.findById(id)
-                .map(ResponseEntity::ok)
+                .map(pedido -> ResponseEntity.ok(pedidoMapper.toDTO(pedido)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Pedido createPedido(@RequestBody Pedido pedido) {
-        return pedidoService.save(pedido);
+    public PedidoDTO createPedido(@RequestBody CreatePedidoDTO createDTO) {
+        Pedido pedido = pedidoMapper.toEntity(createDTO);
+        Pedido savedPedido = pedidoService.save(pedido);
+        return pedidoMapper.toDTO(savedPedido);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Pedido> updatePedido(@PathVariable Long id, @RequestBody Pedido pedidoDetails) {
+    public ResponseEntity<PedidoDTO> updatePedido(@PathVariable Long id, @RequestBody UpdatePedidoDTO updateDTO) {
         return pedidoService.findById(id)
                 .map(pedido -> {
-                    pedido.setFechaPedido(pedidoDetails.getFechaPedido());
-                    pedido.setTotal(pedidoDetails.getTotal());
-                    pedido.setUsuario(pedidoDetails.getUsuario());
-                    pedido.setProductos(pedidoDetails.getProductos());
-                    pedido.setPago(pedidoDetails.getPago());
-                    pedido.setEnvio(pedidoDetails.getEnvio());
-                    pedido.setHistorial(pedidoDetails.getHistorial());
+                    pedidoMapper.updateEntity(updateDTO, pedido);
                     Pedido updatedPedido = pedidoService.save(pedido);
-                    return ResponseEntity.ok(updatedPedido);
+                    return ResponseEntity.ok(pedidoMapper.toDTO(updatedPedido));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -57,4 +60,5 @@ public class PedidoController {
         }
         return ResponseEntity.notFound().build();
     }
+
 }
