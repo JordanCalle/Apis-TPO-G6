@@ -1,12 +1,17 @@
 package com.tpo.ecommerce.grupo6.service;
 
-import com.tpo.ecommerce.grupo6.exception.ProductoNoEncontradoException;
-import com.tpo.ecommerce.grupo6.model.Producto;
-import com.tpo.ecommerce.grupo6.repository.ProductoRepository;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.tpo.ecommerce.grupo6.dto.CreateProductoDTO;
+import com.tpo.ecommerce.grupo6.dto.ProductoDTO;
+import com.tpo.ecommerce.grupo6.dto.UpdateProductoDTO;
+import com.tpo.ecommerce.grupo6.exception.ProductoNoEncontradoException;
+import com.tpo.ecommerce.grupo6.mapper.ProductoMapper;
+import com.tpo.ecommerce.grupo6.model.Producto;
+import com.tpo.ecommerce.grupo6.repository.ProductoRepository;
 
 @Service
 public class ProductoService {
@@ -14,13 +19,18 @@ public class ProductoService {
     @Autowired
     private ProductoRepository productoRepository;
 
-    public List<Producto> findAll() {
-        return productoRepository.findAll();
+    @Autowired
+    private ProductoMapper productoMapper;
+
+    public List<ProductoDTO> findAll() {
+        return productoMapper.toDTOList(productoRepository.findAll());
     }
 
-    public Producto findById(Long id) {
-        return productoRepository.findById(id)
-                .orElseThrow(() -> new ProductoNoEncontradoException("Producto no encontrado con id: " + id));
+    public ProductoDTO findById(Long id) {
+    Producto producto = productoRepository.findById(id)
+            .orElseThrow(() -> new ProductoNoEncontradoException("Producto no encontrado con id: " + id));
+
+        return productoMapper.toDTO(producto);
     }
 
     public Producto save(Producto producto) {
@@ -32,5 +42,22 @@ public class ProductoService {
             throw new ProductoNoEncontradoException("No se puede eliminar. Producto no encontrado con id: " + id);
         }
         productoRepository.deleteById(id);
+    }
+
+    public ProductoDTO createProducto(CreateProductoDTO dto) {
+    Producto producto = productoMapper.toEntity(dto);
+    Producto savedProducto = productoRepository.save(producto);
+
+    return productoMapper.toDTO(savedProducto);
+    }
+
+    public ProductoDTO updateProducto(Long id, UpdateProductoDTO dto) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ProductoNoEncontradoException("Producto no encontrado con id: " + id));
+
+        productoMapper.updateEntity(dto, producto);
+        Producto updatedProducto = productoRepository.save(producto);
+
+        return productoMapper.toDTO(updatedProducto);
     }
 }

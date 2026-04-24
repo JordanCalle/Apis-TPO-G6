@@ -3,6 +3,7 @@ package com.tpo.ecommerce.grupo6.service;
 import com.tpo.ecommerce.grupo6.dto.ItemCarritoDTO;
 import com.tpo.ecommerce.grupo6.dto.CheckoutDTO;
 import com.tpo.ecommerce.grupo6.dto.PagoRequestDTO;
+import com.tpo.ecommerce.grupo6.dto.UpdatePedidoDTO;
 import com.tpo.ecommerce.grupo6.exception.ProductoNoEncontradoException;
 import com.tpo.ecommerce.grupo6.exception.StockInsuficienteException;
 import com.tpo.ecommerce.grupo6.exception.UsuarioNoEncontradoException;
@@ -11,6 +12,11 @@ import com.tpo.ecommerce.grupo6.repository.HistorialPedidoRepository;
 import com.tpo.ecommerce.grupo6.repository.PagoRepository;
 import com.tpo.ecommerce.grupo6.repository.PedidoRepository;
 import com.tpo.ecommerce.grupo6.repository.ProductoRepository;
+import com.tpo.ecommerce.grupo6.dto.CreatePedidoDTO;
+import com.tpo.ecommerce.grupo6.dto.PedidoDTO;
+import com.tpo.ecommerce.grupo6.mapper.PedidoMapper;
+
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.tpo.ecommerce.grupo6.dto.UsuarioDTO;
 
 @Service
 public class PedidoService {
@@ -35,29 +43,44 @@ public class PedidoService {
     private PagoRepository pagoRepository;
 
     @Autowired
+    private PedidoMapper pedidoMapper;
+
+    @Autowired
     private HistorialPedidoRepository historialPedidoRepository;
 
     @Autowired
     private UsuarioService usuarioService;
 
-    public List<Pedido> findAll() {
-        return pedidoRepository.findAll();
+    public List<PedidoDTO> findAll() {
+        return pedidoMapper.toDTOList(pedidoRepository.findAll());
     }
 
-    public Optional<Pedido> findById(Long id) {
-        return pedidoRepository.findById(id);
-    }
+   public PedidoDTO findById(Long id) {
+    Pedido pedido = pedidoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado con id: " + id));
+
+    return pedidoMapper.toDTO(pedido);
+    }    
 
     public Pedido save(Pedido pedido) {
         return pedidoRepository.save(pedido);
     }
 
     public void deleteById(Long id) {
+        if (!pedidoRepository.existsById(id)) {
+        throw new RuntimeException("Pedido no encontrado con id: " + id);
+        }
         pedidoRepository.deleteById(id);
     }
 
+    public PedidoDTO create(CreatePedidoDTO dto) {
+    Pedido pedido = pedidoMapper.toEntity(dto);
+    Pedido savedPedido = pedidoRepository.save(pedido);
+    return pedidoMapper.toDTO(savedPedido);
+    }
+
     @Transactional
-    public Pedido checkout(CheckoutDTO checkoutDTO) {
+    public PedidoDTO checkout(CheckoutDTO checkoutDTO) {
 
         // Validar que los datos del pago vienen en el request
         if (checkoutDTO.getPago() == null) {
@@ -167,5 +190,14 @@ public class PedidoService {
         }
 
         return producto;
+    }
+
+    public @Nullable Object updatePedido(Long id, UpdatePedidoDTO updateDTO) {
+        Pedido pedido = pedidoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado con id: " + id));
+    pedidoMapper.updateEntity(updateDTO, pedido);
+
+    Pedido updatedPedido = pedidoRepository.save(pedido);
+    return pedidoMapper.toDTO(updatedPedido);
     }
 }
