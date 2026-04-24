@@ -43,13 +43,12 @@ public class UsuarioService {
         Usuario savedUsuario = usuarioRepository.save(usuario);
         return usuarioMapper.toDTO(savedUsuario);
     }
-    
+
     public Usuario findEntityById(Long id) {
-    return usuarioRepository.findById(id)
-        .orElseThrow(() -> new UsuarioNoEncontradoException(
-            "Usuario no encontrado con id: " + id
-        ));
-}
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new UsuarioNoEncontradoException(
+                        "Usuario no encontrado con id: " + id));
+    }
 
     public Optional<UsuarioDTO> update(Long id, UpdateUsuarioDTO dto) {
         return usuarioRepository.findById(id)

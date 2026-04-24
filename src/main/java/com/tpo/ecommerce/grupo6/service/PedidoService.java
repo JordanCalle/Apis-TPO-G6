@@ -1,22 +1,12 @@
 package com.tpo.ecommerce.grupo6.service;
 
-import com.tpo.ecommerce.grupo6.dto.ItemCarritoDTO;
-import com.tpo.ecommerce.grupo6.dto.CheckoutDTO;
-import com.tpo.ecommerce.grupo6.dto.PagoRequestDTO;
-import com.tpo.ecommerce.grupo6.dto.UpdatePedidoDTO;
+import com.tpo.ecommerce.grupo6.dto.*;
 import com.tpo.ecommerce.grupo6.exception.ProductoNoEncontradoException;
 import com.tpo.ecommerce.grupo6.exception.StockInsuficienteException;
 import com.tpo.ecommerce.grupo6.exception.UsuarioNoEncontradoException;
-import com.tpo.ecommerce.grupo6.model.*;
-import com.tpo.ecommerce.grupo6.repository.HistorialPedidoRepository;
-import com.tpo.ecommerce.grupo6.repository.PagoRepository;
-import com.tpo.ecommerce.grupo6.repository.PedidoRepository;
-import com.tpo.ecommerce.grupo6.repository.ProductoRepository;
-import com.tpo.ecommerce.grupo6.dto.CreatePedidoDTO;
-import com.tpo.ecommerce.grupo6.dto.PedidoDTO;
 import com.tpo.ecommerce.grupo6.mapper.PedidoMapper;
-
-import org.jspecify.annotations.Nullable;
+import com.tpo.ecommerce.grupo6.model.*;
+import com.tpo.ecommerce.grupo6.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.tpo.ecommerce.grupo6.dto.UsuarioDTO;
 
 @Service
 public class PedidoService {
@@ -43,6 +31,9 @@ public class PedidoService {
     private PagoRepository pagoRepository;
 
     @Autowired
+    private PedidoProductoRepository pedidoProductoRepository;
+
+    @Autowired
     private PedidoMapper pedidoMapper;
 
     @Autowired
@@ -55,12 +46,11 @@ public class PedidoService {
         return pedidoMapper.toDTOList(pedidoRepository.findAll());
     }
 
-   public PedidoDTO findById(Long id) {
-    Pedido pedido = pedidoRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Pedido no encontrado con id: " + id));
-
-    return pedidoMapper.toDTO(pedido);
-    }    
+    public PedidoDTO findById(Long id) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con id: " + id));
+        return pedidoMapper.toDTO(pedido);
+    }
 
     public Pedido save(Pedido pedido) {
         return pedidoRepository.save(pedido);
@@ -68,71 +58,84 @@ public class PedidoService {
 
     public void deleteById(Long id) {
         if (!pedidoRepository.existsById(id)) {
-        throw new RuntimeException("Pedido no encontrado con id: " + id);
+            throw new RuntimeException("Pedido no encontrado con id: " + id);
         }
         pedidoRepository.deleteById(id);
     }
 
     public PedidoDTO create(CreatePedidoDTO dto) {
-    Pedido pedido = pedidoMapper.toEntity(dto);
-    Pedido savedPedido = pedidoRepository.save(pedido);
-    return pedidoMapper.toDTO(savedPedido);
+        Pedido pedido = pedidoMapper.toEntity(dto);
+        Pedido savedPedido = pedidoRepository.save(pedido);
+        return pedidoMapper.toDTO(savedPedido);
     }
 
     @Transactional
     public PedidoDTO checkout(CheckoutDTO checkoutDTO) {
-
         // Validar que los datos del pago vienen en el request
         if (checkoutDTO.getPago() == null) {
             throw new IllegalArgumentException("Información de pago requerida");
         }
 
-        Usuario usuario = usuarioService.findById(checkoutDTO.getUsuarioId())
-                .orElseThrow(() -> new UsuarioNoEncontradoException(
-                        "Usuario no encontrado con id: " + checkoutDTO.getUsuarioId()));
+        Usuario usuario = usuarioService.findEntityById(checkoutDTO.getUsuarioId());
 
         if (checkoutDTO.getItems() == null || checkoutDTO.getItems().isEmpty()) {
             throw new IllegalArgumentException("El carrito está vacío");
         }
 
-        BigDecimal total = BigDecimal.ZERO;
+        // Validar stock y obtener productos
         List<Producto> productosCompra = checkoutDTO.getItems().stream()
-                .map(item -> validarStock(item))
+                .map(this::validarStock)
                 .collect(Collectors.toList());
 
-        for (int i = 0; i < checkoutDTO.getItems().size(); i++) {
-            ItemCarritoDTO item = checkoutDTO.getItems().get(i);
-            Producto producto = productosCompra.get(i);
-            BigDecimal subtotal = producto.getPrecio()
-                    .multiply(new BigDecimal(item.getCantidad()));
-            total = total.add(subtotal);
-        }
+        // Calcular total y crear detalles del pedido
+        BigDecimal total = BigDecimal.ZERO;
+        List<PedidoProducto> detallesPedido = new ArrayList<>();
 
         for (int i = 0; i < checkoutDTO.getItems().size(); i++) {
             ItemCarritoDTO item = checkoutDTO.getItems().get(i);
             Producto producto = productosCompra.get(i);
+
+            BigDecimal subtotal = producto.getPrecio().multiply(new BigDecimal(item.getCantidad()));
+            total = total.add(subtotal);
+
+            // Crear detalle del pedido con cantidad e importe
+            PedidoProducto detalle = new PedidoProducto();
+            detalle.setProducto(producto);
+            detalle.setCantidad(item.getCantidad());
+            detalle.setPrecioUnitario(producto.getPrecio());
+            detalle.setSubtotal(subtotal);
+            detallesPedido.add(detalle);
+
+            // Descontar stock
             producto.setStock(producto.getStock() - item.getCantidad());
             productoRepository.save(producto);
         }
 
+        // Crear pedido
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);
-        pedido.setProductos(productosCompra);
         pedido.setTotal(total);
         pedido.setFechaPedido(LocalDateTime.now());
 
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
-        // Primer estado del pedido, previo al pago
+        // Vincular detalles al pedido
+        for (PedidoProducto detalle : detallesPedido) {
+            detalle.setPedido(pedidoGuardado);
+            pedidoProductoRepository.save(detalle);
+        }
+        pedidoGuardado.setDetalles(detallesPedido);
+
+        // Crear historial inicial
         crearHistorialPedido(pedidoGuardado, "CREADO", "Pedido creado, pago pendiente.");
 
+        // Procesar pago
         procesarPago(pedidoGuardado, total, checkoutDTO.getPago());
 
-        // Mockeamos estado de pedido ya que estamos simulando un pago exitoso. En un
-        // caso real debería utilizar la salida del procesarPago()
+        // Crear historial de pago procesado
         crearHistorialPedido(pedidoGuardado, "PAGO_PROCESADO", "Pago procesado exitosamente");
 
-        return pedidoGuardado;
+        return pedidoMapper.toDTO(pedidoGuardado);
     }
 
     private void procesarPago(Pedido pedido, BigDecimal monto, PagoRequestDTO pagoRequest) {
@@ -141,8 +144,6 @@ public class PedidoService {
             throw new IllegalArgumentException("Método de pago es requerido");
         }
 
-        // Este método hace una validación simple, acá llamaría a una api externa para
-        // procesar el pago
         validarDatosPago(pagoRequest);
 
         Pago pago = new Pago();
@@ -152,7 +153,6 @@ public class PedidoService {
         pago.setPedido(pedido);
 
         Pago pagoGuardado = pagoRepository.save(pago);
-
         pedido.setPago(pagoGuardado);
         pedidoRepository.save(pedido);
     }
@@ -165,7 +165,6 @@ public class PedidoService {
             if (pagoRequest.getCvv() == null || pagoRequest.getCvv().isEmpty()) {
                 throw new IllegalArgumentException("CVV requerido");
             }
-
         }
     }
 
@@ -192,12 +191,11 @@ public class PedidoService {
         return producto;
     }
 
-    public @Nullable Object updatePedido(Long id, UpdatePedidoDTO updateDTO) {
+    public PedidoDTO updatePedido(Long id, UpdatePedidoDTO updateDTO) {
         Pedido pedido = pedidoRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Pedido no encontrado con id: " + id));
-    pedidoMapper.updateEntity(updateDTO, pedido);
-
-    Pedido updatedPedido = pedidoRepository.save(pedido);
-    return pedidoMapper.toDTO(updatedPedido);
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con id: " + id));
+        pedidoMapper.updateEntity(updateDTO, pedido);
+        Pedido updatedPedido = pedidoRepository.save(pedido);
+        return pedidoMapper.toDTO(updatedPedido);
     }
 }

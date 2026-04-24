@@ -1,9 +1,11 @@
 package com.tpo.ecommerce.grupo6.mapper;
 
 import com.tpo.ecommerce.grupo6.dto.CreatePedidoDTO;
+import com.tpo.ecommerce.grupo6.dto.DetallePedidoDTO;
 import com.tpo.ecommerce.grupo6.dto.PedidoDTO;
 import com.tpo.ecommerce.grupo6.dto.UpdatePedidoDTO;
 import com.tpo.ecommerce.grupo6.model.Pedido;
+import com.tpo.ecommerce.grupo6.model.PedidoProducto;
 import com.tpo.ecommerce.grupo6.model.Producto;
 import com.tpo.ecommerce.grupo6.model.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +32,9 @@ public class PedidoMapper {
             dto.setUsuarioId(pedido.getUsuario().getId());
             dto.setUsuarioNombre(pedido.getUsuario().getNombre());
         }
-        if (pedido.getProductos() != null) {
-            dto.setProductos(pedido.getProductos().stream()
-                    .map(productoMapper::toDTO)
+        if (pedido.getDetalles() != null) {
+            dto.setDetalles(pedido.getDetalles().stream()
+                    .map(this::convertDetalle)
                     .collect(Collectors.toList()));
         }
         if (pedido.getPago() != null) {
@@ -61,16 +63,6 @@ public class PedidoMapper {
             usuario.setId(dto.getUsuarioId());
             pedido.setUsuario(usuario);
         }
-        if (dto.getProductosIds() != null && !dto.getProductosIds().isEmpty()) {
-            List<Producto> productos = dto.getProductosIds().stream()
-                    .map(id -> {
-                        Producto p = new Producto();
-                        p.setId(id);
-                        return p;
-                    })
-                    .collect(Collectors.toList());
-            pedido.setProductos(productos);
-        }
         return pedido;
     }
 
@@ -84,15 +76,21 @@ public class PedidoMapper {
         if (dto.getTotal() != null) {
             pedido.setTotal(dto.getTotal());
         }
-        if (dto.getProductosIds() != null && !dto.getProductosIds().isEmpty()) {
-            List<Producto> productos = dto.getProductosIds().stream()
-                    .map(id -> {
-                        Producto p = new Producto();
-                        p.setId(id);
-                        return p;
-                    })
-                    .collect(Collectors.toList());
-            pedido.setProductos(productos);
+    }
+
+    public DetallePedidoDTO convertDetalle(PedidoProducto detalle) {
+        if (detalle == null) {
+            return null;
         }
+        DetallePedidoDTO dto = new DetallePedidoDTO();
+        dto.setId(detalle.getId());
+        if (detalle.getProducto() != null) {
+            dto.setProductoId(detalle.getProducto().getId());
+            dto.setProductoNombre(detalle.getProducto().getNombre());
+        }
+        dto.setCantidad(detalle.getCantidad());
+        dto.setPrecioUnitario(detalle.getPrecioUnitario());
+        dto.setSubtotal(detalle.getSubtotal());
+        return dto;
     }
 }

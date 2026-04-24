@@ -13,7 +13,7 @@ public class PedidoDTO {
     private BigDecimal total;
     private Long usuarioId;
     private String usuarioNombre;
-    private List<ProductoDTO> productos;
+    private List<DetallePedidoDTO> detalles;
     private Long pagoId;
     private Long envioId;
 }
