@@ -1,6 +1,6 @@
 package com.tpo.ecommerce.grupo6.controller;
 
-import com.tpo.ecommerce.grupo6.model.Usuario;
+import com.tpo.ecommerce.grupo6.dto.UsuarioDTO;
 import com.tpo.ecommerce.grupo6.security.AuthService;
 import com.tpo.ecommerce.grupo6.security.dto.AuthRequest;
 import com.tpo.ecommerce.grupo6.security.dto.AuthResponse;
@@ -23,12 +23,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Usuario> register(@RequestBody RegisterRequest request) {
-        Usuario usuario = new Usuario();
-        usuario.setNombre(request.getNombre());
-        usuario.setEmail(request.getEmail());
-        usuario.setPassword(request.getPassword());
-        Usuario savedUser = authService.register(usuario);
-        return ResponseEntity.ok(savedUser);
+    public ResponseEntity<UsuarioDTO> register(@RequestBody RegisterRequest request) {
+        UsuarioDTO usuarioDTO = authService.register(request);
+        return ResponseEntity.ok(usuarioDTO);
     }
 }
