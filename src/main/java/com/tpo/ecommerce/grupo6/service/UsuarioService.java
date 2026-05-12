@@ -1,5 +1,6 @@
 package com.tpo.ecommerce.grupo6.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,7 @@ public class UsuarioService {
 
     public UsuarioDTO save(CreateUsuarioDTO dto) {
         Usuario usuario = usuarioMapper.toEntity(dto);
+        usuario.setFechaRegistro(LocalDateTime.now());
         Usuario savedUsuario = usuarioRepository.save(usuario);
         return usuarioMapper.toDTO(savedUsuario);
     }

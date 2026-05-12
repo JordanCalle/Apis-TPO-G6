@@ -13,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class AuthService {
 
@@ -43,6 +45,7 @@ public class AuthService {
         }
         Usuario usuario = authMapper.registerRequestToEntity(request);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        usuario.setFechaRegistro(LocalDateTime.now());
         if (usuario.getRole() == null) {
             usuario.setRole(Role.ROLE_USER);
         }
