@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { API_URL } from "../services/api";
+import { getProductos } from "../services/api";
 
 function ProductList() {
   const [products, setProducts] = useState([]);
@@ -13,13 +13,7 @@ function ProductList() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`${API_URL}/productos`);
-
-        if (!response.ok) {
-          throw new Error("No se pudieron cargar los productos");
-        }
-
-        const data = await response.json();
+        const data = await getProductos();
         setProducts(data);
       } catch (err) {
         setError(err.message);

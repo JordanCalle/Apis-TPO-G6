@@ -1,10 +1,12 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { API_URL } from "../services/api";
+import { checkoutPedido } from "../services/api";
 import { CartContext } from "../context/CartProvider";
+import { AuthContext } from "../context/AuthProvider";
 
 function Checkout() {
   const { cartItems, clearCart } = useContext(CartContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -45,11 +47,16 @@ function Checkout() {
   const handleCheckout = async (event) => {
     event.preventDefault();
 
+    if (!user) {
+      setError("Debes estar autenticado para realizar una compra");
+      navigate("/login");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       setSuccessMessage("");
-      //testeo para el checkout
 
       const pagoData =
         pago.metodo === "TARJETA_CREDITO"
@@ -62,7 +69,7 @@ function Checkout() {
             };
 
       const checkoutData = {
-        usuarioId: 1,
+        usuarioId: user.usuarioId,
         items: cartItems.map((item) => ({
           productoId: item.id,
           cantidad: 1,
@@ -70,20 +77,7 @@ function Checkout() {
         pago: pagoData,
       };
 
-      const response = await fetch(`${API_URL}/pedidos/checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(checkoutData),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `No se pudo finalizar la compra. Status: ${response.status}. Respuesta: ${errorText}`
-        );
-      }
+      await checkoutPedido(checkoutData);
 
       setSuccessMessage("Compra realizada correctamente");
       clearCart();

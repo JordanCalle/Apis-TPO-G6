@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { API_URL } from "../services/api";
+import { getProductoById } from "../services/api";
 import { CartContext } from "../context/CartProvider";
 
 function ProductDetail() {
@@ -18,13 +18,7 @@ function ProductDetail() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`${API_URL}/productos/${id}`);
-
-        if (!response.ok) {
-          throw new Error("No se pudo cargar el detalle del producto");
-        }
-
-        const data = await response.json();
+        const data = await getProductoById(id);
         setProduct(data);
       } catch (err) {
         setError(err.message);
