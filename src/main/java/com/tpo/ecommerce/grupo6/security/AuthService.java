@@ -5,6 +5,7 @@ import com.tpo.ecommerce.grupo6.exception.EmailExistenteException;
 import com.tpo.ecommerce.grupo6.mapper.AuthMapper;
 import com.tpo.ecommerce.grupo6.model.Usuario;
 import com.tpo.ecommerce.grupo6.repository.UsuarioRepository;
+import com.tpo.ecommerce.grupo6.security.dto.AuthResponse;
 import com.tpo.ecommerce.grupo6.security.dto.RegisterRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,10 +34,15 @@ public class AuthService {
     @Autowired
     private AuthMapper authMapper;
 
-    public String authenticate(String email, String password) {
+    public AuthResponse authenticate(String email, String password) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password));
-        return jwtUtils.generateToken(authentication.getName());
+        String token = jwtUtils.generateToken(authentication.getName());
+
+        // Obtener los datos del usuario
+        Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow();
+
+        return new AuthResponse(token, usuario.getId(), usuario.getNombre(), usuario.getEmail());
     }
 
     public UsuarioDTO register(RegisterRequest request) {
