@@ -36,14 +36,19 @@ function ProductDetail() {
   };
 
   if (loading) {
-    return <p>Cargando detalle del producto...</p>;
+    return <p className="detalle-status">Cargando detalle del producto...</p>;
   }
 
   if (error) {
     return (
       <main>
-        <p>Error: {error}</p>
-        <Link to="/productos">Volver a productos</Link>
+        <section className="detalle-card">
+          <p className="detalle-error">Error: {error}</p>
+
+          <Link className="detalle-link" to="/productos">
+            Volver a productos
+          </Link>
+        </section>
       </main>
     );
   }
@@ -51,36 +56,56 @@ function ProductDetail() {
   if (!product) {
     return (
       <main>
-        <p>No se encontró el producto.</p>
-        <Link to="/productos">Volver a productos</Link>
+        <section className="detalle-card">
+          <p className="detalle-error">No se encontró el producto.</p>
+
+          <Link className="detalle-link" to="/productos">
+            Volver a productos
+          </Link>
+        </section>
       </main>
     );
   }
 
   return (
     <main>
-      <h1>{product.nombre || "Producto sin nombre"}</h1>
+      <section className="detalle-card">
+        <h1>{product.nombre || "Producto sin nombre"}</h1>
 
-      <p>{product.descripcion || "Sin descripción disponible"}</p>
+        <p className="detalle-descripcion">
+          {product.descripcion || "Sin descripción disponible"}
+        </p>
 
-      <p>Precio: ${product.precio || 0}</p>
+        <div className="detalle-precio">
+          <span>Precio</span>
+          <strong>${product.precio || 0}</strong>
+        </div>
 
-      {product.stock !== undefined && (
-        <p>Stock disponible: {product.stock}</p>
-      )}
+        <div className="detalle-meta">
+          {product.stock !== undefined && (
+            <p>
+              <span>Stock disponible:</span> {product.stock}
+            </p>
+          )}
 
-      {product.categoria && (
-        <p>Categoría: {product.categoria.nombre || product.categoria}</p>
-      )}
+          {product.categoria && (
+            <p>
+              <span>Categoría:</span>{" "}
+              {product.categoria.nombre || product.categoria}
+            </p>
+          )}
+        </div>
 
-      <button onClick={handleAddToCart}>
-        Agregar al carrito
-      </button>
+        <div className="detalle-actions">
+          <button onClick={handleAddToCart}>
+            Agregar al carrito
+          </button>
 
-      <br />
-      <br />
-
-      <Link to="/productos">Volver a productos</Link>
+          <Link className="detalle-link" to="/productos">
+            Volver a productos
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

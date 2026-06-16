@@ -102,32 +102,53 @@ function Checkout() {
     );
   }
 
+if (cartItems.length === 0 && !successMessage) {
   return (
     <main>
       <h1>Checkout</h1>
 
-      {error && <p>Error: {error}</p>}
-      {successMessage && <p>{successMessage}</p>}
+      <section className="checkout-empty">
+        <p>No hay productos en el carrito para comprar.</p>
 
-      {!successMessage && (
-        <form onSubmit={handleCheckout}>
-          <section>
-            <h2>Resumen de compra</h2>
+        <Link className="checkout-link" to="/productos">
+          Volver a productos
+        </Link>
+      </section>
+    </main>
+  );
+}
 
-            {cartItems.map((item, index) => (
-              <article key={`${item.id}-${index}`}>
+return (
+  <main>
+    <h1>Checkout</h1>
+
+    {error && <p className="checkout-error">Error: {error}</p>}
+    {successMessage && <p className="checkout-success">{successMessage}</p>}
+
+    {!successMessage && (
+      <form className="checkout-layout" onSubmit={handleCheckout}>
+        <section className="checkout-lista">
+          <h2>Resumen de compra</h2>
+
+          {cartItems.map((item, index) => (
+            <article className="checkout-card" key={`${item.id}-${index}`}>
+              <div className="checkout-info">
                 <h3>{item.nombre || "Producto sin nombre"}</h3>
-                <p>Precio: ${item.precio || 0}</p>
                 <p>Cantidad: 1</p>
-              </article>
-            ))}
+              </div>
 
-            <h3>Total: ${total}</h3>
-          </section>
+              <div className="checkout-precio">
+                <span>Precio</span>
+                <strong>${item.precio || 0}</strong>
+              </div>
+            </article>
+          ))}
+        </section>
 
-          <section>
-            <h2>Método de pago</h2>
+        <section className="checkout-form-card">
+          <h2>Método de pago</h2>
 
+          <div className="checkout-field">
             <label htmlFor="metodo">Seleccioná un método:</label>
             <select
               id="metodo"
@@ -141,76 +162,82 @@ function Checkout() {
               <option value="TRANSFERENCIA">Transferencia bancaria</option>
               <option value="MERCADO_PAGO">Mercado Pago</option>
             </select>
+          </div>
 
-            {pago.metodo === "TARJETA_CREDITO" && (
-              <div>
-                <div>
-                  <label htmlFor="numeroTarjeta">Número de tarjeta:</label>
-                  <input
-                    id="numeroTarjeta"
-                    name="numeroTarjeta"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength="19"
-                    value={pago.numeroTarjeta}
-                    onChange={handlePagoChange}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="titular">Titular:</label>
-                  <input
-                    id="titular"
-                    name="titular"
-                    type="text"
-                    value={pago.titular}
-                    onChange={handlePagoChange}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="fechaVencimiento">Vencimiento:</label>
-                  <input
-                    id="fechaVencimiento"
-                    name="fechaVencimiento"
-                    type="text"
-                    placeholder="MM/AA"
-                    maxLength="5"
-                    value={pago.fechaVencimiento}
-                    onChange={handlePagoChange}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="cvv">CVV:</label>
-                  <input
-                    id="cvv"
-                    name="cvv"
-                    type="password"
-                    inputMode="numeric"
-                    maxLength="4"
-                    value={pago.cvv}
-                    onChange={handlePagoChange}
-                    required
-                  />
-                </div>
+          {pago.metodo === "TARJETA_CREDITO" && (
+            <div className="checkout-card-fields">
+              <div className="checkout-field">
+                <label htmlFor="numeroTarjeta">Número de tarjeta:</label>
+                <input
+                  id="numeroTarjeta"
+                  name="numeroTarjeta"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength="19"
+                  value={pago.numeroTarjeta}
+                  onChange={handlePagoChange}
+                  required
+                />
               </div>
-            )}
-          </section>
+
+              <div className="checkout-field">
+                <label htmlFor="titular">Titular:</label>
+                <input
+                  id="titular"
+                  name="titular"
+                  type="text"
+                  value={pago.titular}
+                  onChange={handlePagoChange}
+                  required
+                />
+              </div>
+
+              <div className="checkout-field">
+                <label htmlFor="fechaVencimiento">Vencimiento:</label>
+                <input
+                  id="fechaVencimiento"
+                  name="fechaVencimiento"
+                  type="text"
+                  placeholder="MM/AA"
+                  maxLength="5"
+                  value={pago.fechaVencimiento}
+                  onChange={handlePagoChange}
+                  required
+                />
+              </div>
+
+              <div className="checkout-field">
+                <label htmlFor="cvv">CVV:</label>
+                <input
+                  id="cvv"
+                  name="cvv"
+                  type="password"
+                  inputMode="numeric"
+                  maxLength="4"
+                  value={pago.cvv}
+                  onChange={handlePagoChange}
+                  required
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="checkout-resumen">
+          <h3>Total: ${total}</h3>
 
           <button type="submit" disabled={loading}>
             {loading ? "Procesando compra..." : "Confirmar compra"}
           </button>
-        </form>
-      )}
+        </section>
+      </form>
+    )}
 
-      <br />
-      <Link to="/carrito">Volver al carrito</Link>
-    </main>
-  );
+    <Link className="checkout-back-link" to="/carrito">
+      Volver al carrito
+    </Link>
+  </main>
+);
 }
 
 export default Checkout;
