@@ -1,10 +1,10 @@
-import { useContext } from "react";
+import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { CartContext } from "../context/CartProvider";
 import { AuthContext } from "../context/AuthProvider";
+import { useContext } from "react";
 
 function Navbar() {
-  const { cartItems } = useContext(CartContext);
+  const cartItems = useSelector((state) => state.cart.items);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
