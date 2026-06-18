@@ -1,12 +1,13 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getProductoById } from "../services/api";
-import { CartContext } from "../context/CartProvider";
+import { addToCart } from "../store/cartSlice";
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useContext(CartContext);
+  const dispatch = useDispatch();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,7 @@ function ProductDetail() {
   }, [id]);
 
   const handleAddToCart = () => {
-    addToCart(product);
+    dispatch(addToCart(product));
     navigate("/carrito");
   };
 

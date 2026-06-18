@@ -1,11 +1,13 @@
 import { useContext, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { checkoutPedido } from "../services/api";
-import { CartContext } from "../context/CartProvider";
+import { clearCart } from "../store/cartSlice";
 import { AuthContext } from "../context/AuthProvider";
 
 function Checkout() {
-  const { cartItems, clearCart } = useContext(CartContext);
+  const cartItems = useSelector((state) => state.cart.items);
+  const dispatch = useDispatch();
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -80,7 +82,7 @@ function Checkout() {
       await checkoutPedido(checkoutData);
 
       setSuccessMessage("Compra realizada correctamente");
-      clearCart();
+      dispatch(clearCart());
 
       setTimeout(() => {
         navigate("/productos");

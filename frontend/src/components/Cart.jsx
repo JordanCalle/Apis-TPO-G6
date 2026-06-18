@@ -1,9 +1,10 @@
-import { useContext } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { CartContext } from "../context/CartProvider";
+import { removeFromCart } from "../store/cartSlice";
 
 function Cart() {
-  const { cartItems, removeFromCart } = useContext(CartContext);
+  const cartItems = useSelector((state) => state.cart.items);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const total = cartItems.reduce((acc, item) => {
@@ -40,7 +41,7 @@ function Cart() {
 
                   <button
                     className="carrito-remove"
-                    onClick={() => removeFromCart(index)}
+                    onClick={() => dispatch(removeFromCart(index))}
                   >
                     Quitar
                   </button>

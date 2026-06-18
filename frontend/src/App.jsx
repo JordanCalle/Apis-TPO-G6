@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { CartProvider } from "./context/CartProvider";
+import { Provider } from "react-redux";
+import { store } from "./store";
 import { AuthProvider } from "./context/AuthProvider";
 import "./App.css";
 
@@ -14,11 +15,9 @@ import Register from "./components/Register";
 
 function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
+      <AuthProvider>
         <BrowserRouter>
           <Navbar />
-
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
@@ -29,8 +28,7 @@ function App() {
             <Route path="/checkout" element={<Checkout />} />
           </Routes>
         </BrowserRouter>
-      </CartProvider>
-    </AuthProvider>
+      </AuthProvider>
   );
 }
 
