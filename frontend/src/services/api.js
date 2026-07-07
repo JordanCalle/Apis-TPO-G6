@@ -1,19 +1,15 @@
 export const API_URL = "http://localhost:8080/api";
 
 const apiCall = async (endpoint, options = {}) => {
-  const token = localStorage.getItem("token");
   const headers = {
     "Content-Type": "application/json",
     ...options.headers,
   };
 
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   if (!response.ok) {

@@ -1,17 +1,17 @@
 import { useContext, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { checkoutPedido } from "../services/api";
-import { clearCart } from "../store/cartSlice";
 import { AuthContext } from "../context/AuthProvider";
+import { checkoutCart } from "../store/cartSlice";
 
 function Checkout() {
   const cartItems = useSelector((state) => state.cart.items);
+  const checkoutStatus = useSelector((state) => state.cart.checkoutStatus);
+  const checkoutError = useSelector((state) => state.cart.checkoutError);
   const dispatch = useDispatch();
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -56,7 +56,6 @@ function Checkout() {
     }
 
     try {
-      setLoading(true);
       setError(null);
       setSuccessMessage("");
 
@@ -79,18 +78,18 @@ function Checkout() {
         pago: pagoData,
       };
 
-      await checkoutPedido(checkoutData);
+      const resultAction = await dispatch(checkoutCart({ checkoutData, userId: user.usuarioId }));
 
-      setSuccessMessage("Compra realizada correctamente");
-      dispatch(clearCart());
-
-      setTimeout(() => {
-        navigate("/productos");
-      }, 1500);
+      if (checkoutCart.fulfilled.match(resultAction)) {
+        setSuccessMessage("Compra realizada correctamente");
+        setTimeout(() => {
+          navigate("/productos");
+        }, 1500);
+      } else {
+        setError(resultAction.payload || "No se pudo completar la compra");
+      }
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setError(err.message || "No se pudo completar la compra");
     }
   };
 
@@ -124,7 +123,7 @@ return (
   <main>
     <h1>Checkout</h1>
 
-    {error && <p className="checkout-error">Error: {error}</p>}
+    {(error || checkoutError) && <p className="checkout-error">Error: {error || checkoutError}</p>}
     {successMessage && <p className="checkout-success">{successMessage}</p>}
 
     {!successMessage && (
@@ -228,8 +227,8 @@ return (
         <section className="checkout-resumen">
           <h3>Total: ${total}</h3>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Procesando compra..." : "Confirmar compra"}
+          <button type="submit" disabled={checkoutStatus === "loading"}>
+            {checkoutStatus === "loading" ? "Procesando compra..." : "Confirmar compra"}
           </button>
         </section>
       </form>

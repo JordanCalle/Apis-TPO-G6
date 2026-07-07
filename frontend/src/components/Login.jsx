@@ -30,17 +30,15 @@ function Login() {
     try {
       const response = await loginAPI(formData);
       
-      // Guardar token y usuario en localStorage y contexto
       const userData = {
         usuarioId: response.usuarioId,
         nombre: response.nombre,
         email: response.email,
       };
-      
-      localStorage.setItem("token", response.token);
+
       localStorage.setItem("user", JSON.stringify(userData));
-      
-      setToken(response.token);
+
+      setToken("cookie");
       setUser(userData);
       
       navigate("/");

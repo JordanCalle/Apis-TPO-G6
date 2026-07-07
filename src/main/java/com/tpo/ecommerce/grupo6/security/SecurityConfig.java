@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/productos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/**").permitAll()
                         // Checkout público para prueba desde React
-                        .requestMatchers(HttpMethod.POST, "/api/pedidos/checkout").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/pedidos/checkout").hasAnyRole("USER", "ADMIN")
                         // Consola H2 (desarrollo)
                         .requestMatchers("/h2-console/**").permitAll()
                         // Endpoints protegidos - Módulo de usuarios (solo ADMIN)

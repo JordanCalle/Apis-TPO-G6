@@ -5,7 +5,7 @@ function Home() {
   return (
     <main>
       <section className="home-hero">
-        <h1>Marketplace Grupo 6</h1>
+        <h1>Ecommerce Grupo 6</h1>
         <p>
           Explorá productos, agregalos al carrito y finalizá tu compra de forma simple.
         </p>
