@@ -7,14 +7,12 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar usuario y token del localStorage al iniciar
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
+
+    if (savedUser) {
       setUser(JSON.parse(savedUser));
+      setToken("cookie");
     }
     setLoading(false);
   }, []);
@@ -22,7 +20,6 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
   };
 
